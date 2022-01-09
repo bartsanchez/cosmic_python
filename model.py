@@ -2,7 +2,7 @@ from datetime import date
 from dataclasses import dataclass
 
 
-@dataclass(frozen=True)
+@dataclass(unsafe_hash=True)
 class OrderLine:
     order_reference: str
     sku: str
