@@ -24,6 +24,11 @@ class Batch:
             return True
         return self.eta > other.eta
 
+    def __eq__(self, other):
+        if not isinstance(other, Batch):
+            return False
+        return other.reference == self.reference
+
     @property
     def allocated_quantity(self) -> int:
         return sum(allocation.quantity for allocation in self._allocations)
