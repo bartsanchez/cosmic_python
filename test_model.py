@@ -39,6 +39,13 @@ def test_cannot_allocate_order_line_to_a_batch_with_different_skus():
     assert batch.can_allocate(line) is False
 
 
+def test_deallocate():
+    batch, line = make_batch_and_line("SMALL-TABLE", 20, 5)
+    batch.allocate(line)
+    batch.deallocate(line)
+    assert batch.available_quantity == 20
+
+
 def test_can_only_deallocate_allocated_lines():
     batch, line = make_batch_and_line("SMALL-TABLE", 20, 5)
     batch.deallocate(line)
