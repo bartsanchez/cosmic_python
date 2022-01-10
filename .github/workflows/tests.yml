@@ -16,3 +16,6 @@ jobs:
 
       - name: Run unit tests
         run: pytest .
+
+      - name: Run mypy
+        run: mypy .
