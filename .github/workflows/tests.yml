@@ -14,8 +14,17 @@ jobs:
       - name: Install requirements
         run: pip install -r requirements.txt
 
+      - name: Build app
+        run: make build
+
+      - name: Start app
+        run: make up
+
       - name: Run unit tests
         run: pytest .
 
       - name: Run mypy
         run: mypy .
+
+      - name: Stop app
+        run: make down
