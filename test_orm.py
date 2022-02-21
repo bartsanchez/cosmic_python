@@ -23,7 +23,9 @@ def test_orderline_mapper_can_save_lines(session):
     session.add(new_line)
     session.commit()
 
-    rows = list(session.execute('SELECT order_reference, sku, quantity FROM "order_lines"'))
+    rows = list(
+        session.execute('SELECT order_reference, sku, quantity FROM "order_lines"')
+    )
     assert rows == [("order1", "DECORATIVE-WIDGET", 12)]
 
 
@@ -48,7 +50,11 @@ def test_saving_batches(session):
     session.add(batch)
     session.commit()
 
-    rows = list(session.execute('SELECT reference, sku, _purchased_quantity, eta FROM "batches"'))
+    rows = list(
+        session.execute(
+            'SELECT reference, sku, _purchased_quantity, eta FROM "batches"'
+        )
+    )
     assert rows == [("batch1", "sku1", 100, None)]
 
 
@@ -59,7 +65,7 @@ def test_retrieving_allocations(session):
     )
     [[orderline_id]] = session.execute(
         "SELECT id FROM order_lines WHERE order_reference=:order_reference AND sku=:sku",
-        dict(order_reference="order1", sku="sku1")
+        dict(order_reference="order1", sku="sku1"),
     )
     session.execute(
         "INSERT INTO batches (reference, sku, _purchased_quantity, eta) VALUES "
@@ -67,11 +73,11 @@ def test_retrieving_allocations(session):
     )
     [[batch_id]] = session.execute(
         "SELECT id FROM batches WHERE reference=:reference AND sku=:sku",
-        dict(reference="batch1", sku="sku1")
+        dict(reference="batch1", sku="sku1"),
     )
     session.execute(
         "INSERT INTO allocations (orderline_id, batch_id) VALUES (:orderline_id, :batch_id)",
-        dict(orderline_id=orderline_id, batch_id=batch_id)
+        dict(orderline_id=orderline_id, batch_id=batch_id),
     )
 
     batch = session.query(model.Batch).one_or_none()

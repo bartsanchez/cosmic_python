@@ -14,6 +14,10 @@ class AbstractRepository(abc.ABC):
     def get(self, reference) -> model.Batch:
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def list(self) -> list[model.Batch]:
+        raise NotImplementedError
+
 
 class SqlAlchemyRepository(AbstractRepository):
     def __init__(self, session: Session):

@@ -2,6 +2,10 @@ from datetime import date
 from dataclasses import dataclass
 
 
+class OutOfStock(Exception):
+    pass
+
+
 @dataclass(unsafe_hash=True)
 class OrderLine:
     order_reference: str
@@ -29,6 +33,9 @@ class Batch:
             return False
         return other.reference == self.reference
 
+    def __hash__(self):
+        return hash(self.reference)
+
     @property
     def allocated_quantity(self) -> int:
         return sum(allocation.quantity for allocation in self._allocations)
@@ -46,4 +53,16 @@ class Batch:
             self._allocations.remove(order_line)
 
     def can_allocate(self, order_line: OrderLine) -> bool:
-        return self.sku == order_line.sku and self.available_quantity >= order_line.quantity
+        return (
+            self.sku == order_line.sku
+            and self.available_quantity >= order_line.quantity
+        )
+
+
+def allocate(line: OrderLine, batches: list[Batch]) -> str:
+    try:
+        batch = next(b for b in sorted(batches) if b.can_allocate(line))
+        batch.allocate(line)
+        return batch.reference
+    except StopIteration:
+        raise OutOfStock(f"Out of stock for sku {line.sku}")

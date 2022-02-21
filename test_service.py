@@ -4,41 +4,59 @@ import pytest
 
 from model import Batch
 from model import OrderLine
+from repository import AbstractRepository
 from service import allocate
-from service import OutOfStock
+from service import InvalidSku
 
 today = date.today()
 tomorrow = today + timedelta(days=1)
 later = tomorrow + timedelta(days=19)
 
 
-def test_allocate__prefers_warehouse_over_shipment_batches():
-    in_stock_batch = Batch("in-stock-batch", "RETRO-CLOCK", 100, eta=None)
-    shipment_batch = Batch("shipment-batch", "RETRO-CLOCK", 100, eta=tomorrow)
-    line = OrderLine("oref", "RETRO-CLOCK", 10)
+class FakeRepository(AbstractRepository):
+    def __init__(self, batches):
+        self._batches = set(batches)
 
-    allocate(line, [in_stock_batch, shipment_batch])
+    def add(self, batch):
+        self._batches.add(batch)
 
-    assert in_stock_batch.available_quantity == 90
-    assert shipment_batch.available_quantity == 100
+    def get(self, reference):
+        return next(b for b in self._batches if b.reference == reference)
 
-
-def test_allocate__low_ETA_is_preferred():
-    earliest = Batch("speedy-batch", "MINIMALIST-SPOON", 100, eta=today)
-    medium = Batch("normal-batch", "MINIMALIST-SPOON", 100, eta=tomorrow)
-    latest = Batch("slow-batch", "MINIMALIST-SPOON", 100, eta=later)
-    line = OrderLine("oref", "MINIMALIST-SPOON", 10)
-
-    allocate(line, [medium, earliest, latest])
-
-    assert earliest.available_quantity == 90
-    assert medium.available_quantity == 100
-    assert latest.available_quantity == 100
+    def list(self):
+        return list(self._batches)
 
 
-def test_raises_out_of_stock_exception_if_cannot_allocate():
-    batch = Batch("batch1", "SMALL-FORK", 10, eta=today)
-    allocate(OrderLine("order1", "SMALL-FORK", 10), [batch])
+class FakeSession:
+    commited = False
 
-    with pytest.raises(OutOfStock, match="SMALL-FORK"):
-        allocate(OrderLine("order2", "SMALL-FORK", 1), [batch])
+    def commit(self):
+        self.commited = True
+
+
+def test_returns_allocation():
+    line = OrderLine("o1", "COMPLICATED-LAMP", 10)
+    batch = Batch("b1", "COMPLICATED-LAMP", 100, eta=None)
+    repo = FakeRepository([batch])
+
+    result = allocate(line, repo, FakeSession())
+    assert result == "b1"
+
+
+def test_error_for_invalid_sku():
+    line = OrderLine("o1", "NONEXISTENTSKU", 10)
+    batch = Batch("b1", "AREALSKU", 100, eta=None)
+    repo = FakeRepository([batch])
+
+    with pytest.raises(InvalidSku, match="Invalid sku NONEXISTENTSKU"):
+        allocate(line, repo, FakeSession())
+
+
+def test_commits():
+    line = OrderLine("o1", "OMINOUS-MIRROR", 10)
+    batch = Batch("b1", "OMINOUS-MIRROR", 100, eta=None)
+    repo = FakeRepository([batch])
+    session = FakeSession()
+
+    allocate(line, repo, session)
+    assert session.commited is True

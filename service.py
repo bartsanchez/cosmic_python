@@ -1,15 +1,20 @@
-from model import Batch
+import model
 from model import OrderLine
+from repository import AbstractRepository
 
 
-class OutOfStock(Exception):
+class InvalidSku(Exception):
     pass
 
 
-def allocate(line: OrderLine, batches: list[Batch]) -> str:
-    try:
-        batch = next(b for b in sorted(batches) if b.can_allocate(line))
-        batch.allocate(line)
-        return batch.reference
-    except StopIteration:
-        raise OutOfStock(f"Out of stock for sku {line.sku}")
+def is_valid_sku(sku, batches):
+    return sku in {b.sku for b in batches}
+
+
+def allocate(line: OrderLine, repo: AbstractRepository, session) -> str:
+    batches = repo.list()
+    if not is_valid_sku(line.sku, batches):
+        raise InvalidSku(f"Invalid sku {line.sku}")
+    batchref = model.allocate(line, batches)
+    session.commit()
+    return batchref

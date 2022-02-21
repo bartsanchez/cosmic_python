@@ -22,7 +22,7 @@ def insert_order_line(session):
     )
     [[orderline_id]] = session.execute(
         "SELECT id FROM order_lines WHERE order_reference=:order_reference AND sku=:sku",
-        dict(order_reference="order1", sku="GENERIC-SOFA")
+        dict(order_reference="order1", sku="GENERIC-SOFA"),
     )
     return orderline_id
 
@@ -31,11 +31,11 @@ def insert_batch(session, reference):
     session.execute(
         "INSERT INTO batches (reference, sku, _purchased_quantity, eta)"
         ' VALUES (:reference, "GENERIC-SOFA", 100, NULL)',
-        dict(reference=reference)
+        dict(reference=reference),
     )
     [[batch_id]] = session.execute(
         "SELECT id FROM order_lines WHERE order_reference=:order_reference AND sku=:sku",
-        dict(order_reference="order1", sku="GENERIC-SOFA")
+        dict(order_reference="order1", sku="GENERIC-SOFA"),
     )
     return batch_id
 
@@ -43,12 +43,12 @@ def insert_batch(session, reference):
 def insert_allocation(session, orderline_id, batch_id):
     session.execute(
         "INSERT INTO allocations (orderline_id, batch_id)"
-        ' VALUES (:orderline_id, :batch_id)',
-        dict(orderline_id=orderline_id, batch_id=batch_id)
+        " VALUES (:orderline_id, :batch_id)",
+        dict(orderline_id=orderline_id, batch_id=batch_id),
     )
     [[allocation_id]] = session.execute(
         "SELECT id FROM allocations WHERE orderline_id=:orderline_id AND batch_id=:batch_id",
-        dict(orderline_id=orderline_id, batch_id=batch_id)
+        dict(orderline_id=orderline_id, batch_id=batch_id),
     )
     return allocation_id
 
