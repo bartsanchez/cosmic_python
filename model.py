@@ -6,6 +6,10 @@ class OutOfStock(Exception):
     pass
 
 
+class ReferenceAndSkuNotFound(Exception):
+    pass
+
+
 @dataclass(unsafe_hash=True)
 class OrderLine:
     order_reference: str
@@ -58,6 +62,11 @@ class Batch:
             and self.available_quantity >= order_line.quantity
         )
 
+    def can_deallocate(self, order_reference: str, sku: str) -> bool:
+        return (order_reference, sku) in (
+            (o.order_reference, o.sku) for o in self._allocations
+        )
+
 
 def allocate(line: OrderLine, batches: list[Batch]) -> str:
     try:
@@ -66,3 +75,21 @@ def allocate(line: OrderLine, batches: list[Batch]) -> str:
         return batch.reference
     except StopIteration:
         raise OutOfStock(f"Out of stock for sku {line.sku}")
+
+
+def deallocate(order_reference: str, sku: str, batches: list[Batch]) -> str:
+    try:
+        batch = next(
+            b for b in sorted(batches) if b.can_deallocate(order_reference, sku)
+        )
+        order_line = next(
+            line
+            for line in batch._allocations
+            if (order_reference, sku) == (line.order_reference, line.sku)
+        )
+        batch.deallocate(order_line)
+        return batch.reference
+    except StopIteration:
+        raise ReferenceAndSkuNotFound(
+            f"Order line not found for such reference {order_reference} and sku {sku}"
+        )

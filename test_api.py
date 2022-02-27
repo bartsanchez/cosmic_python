@@ -93,3 +93,41 @@ def test_unhappy_path_returns_400_and_error_message():
 
     assert r.status_code == 400
     assert r.json()["message"] == f"Invalid sku {unknown_sku}"
+
+
+@pytest.mark.usefixtures("postgres_db")
+@pytest.mark.usefixtures("restart_api")
+def test_deallocate(add_stock):
+    sku, order1, order2 = random_sku(), random_orderid(), random_orderid()
+    batch = random_batchref()
+    add_stock([(batch, sku, 100, "2011-01-2")])
+
+    url = config.get_api_url()
+    # fully allocate
+    r = requests.post(
+        f"{url}/allocate",
+        json={"order_reference": order1, "sku": sku, "quantity": 100},
+    )
+    assert r.json()["batchref"] == batch
+
+    # cannot allocate second order
+    r = requests.post(
+        f"{url}/allocate",
+        json={"order_reference": order2, "sku": sku, "quantity": 100},
+    )
+    assert r.status_code == 400
+
+    # deallocate
+    r = requests.post(
+        f"{url}/deallocate",
+        json={"order_reference": order1, "sku": sku},
+    )
+    assert r.ok
+
+    # now we can allocate second order
+    r = requests.post(
+        f"{url}/allocate",
+        json={"order_reference": order2, "sku": sku, "quantity": 100},
+    )
+    assert r.ok
+    assert r.json()["batchref"] == batch

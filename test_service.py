@@ -4,8 +4,10 @@ import pytest
 
 from model import Batch
 from model import OrderLine
+from model import ReferenceAndSkuNotFound
 from repository import AbstractRepository
 from service import allocate
+from service import deallocate
 from service import InvalidSku
 
 today = date.today()
@@ -60,3 +62,50 @@ def test_commits():
 
     allocate(line, repo, session)
     assert session.commited is True
+
+
+def test_deallocate_decrements_available_quantity():
+    batch = Batch("b1", "BLUE-PLINTH", 100, eta=None)
+    repo, session = FakeRepository([batch]), FakeSession()
+
+    allocate(OrderLine("o1", "BLUE-PLINTH", 10), repo, session)
+    batch = repo.get(reference="b1")
+    assert batch.available_quantity == 90
+
+    deallocate("o1", "BLUE-PLINTH", repo, session)
+    assert batch.available_quantity == 100
+
+
+def test_trying_to_deallocate_unallocated_batch():
+    batch = Batch("b1", "AREALSKU", 100, eta=None)
+    repo = FakeRepository([batch])
+
+    with pytest.raises(InvalidSku, match="Invalid sku NONEXISTENTSKU"):
+        deallocate("o1", "NONEXISTENTSKU", repo, FakeSession())
+
+
+def test_trying_to_deallocate_incorrect_data_from_batch__reference():
+    batch = Batch("b1", "BLUE-PLINTH", 100, eta=None)
+    repo, session = FakeRepository([batch]), FakeSession()
+
+    allocate(OrderLine("o1", "BLUE-PLINTH", 10), repo, session)
+    batch = repo.get(reference="b1")
+    assert batch.available_quantity == 90
+
+    msg = "Order line not found for such reference NONEXISTENTREFERENCE and sku BLUE-PLINTH"
+    with pytest.raises(ReferenceAndSkuNotFound, match=msg):
+        deallocate("NONEXISTENTREFERENCE", "BLUE-PLINTH", repo, session)
+    assert batch.available_quantity == 90
+
+
+def test_trying_to_deallocate_incorrect_data_from_batch__sku():
+    batch = Batch("b1", "BLUE-PLINTH", 100, eta=None)
+    repo, session = FakeRepository([batch]), FakeSession()
+
+    allocate(OrderLine("o1", "BLUE-PLINTH", 10), repo, session)
+    batch = repo.get(reference="b1")
+    assert batch.available_quantity == 90
+
+    with pytest.raises(InvalidSku, match="Invalid sku NONEXISTENTSKU"):
+        deallocate("o1", "NONEXISTENTSKU", repo, session)
+    assert batch.available_quantity == 90

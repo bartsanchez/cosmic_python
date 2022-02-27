@@ -18,3 +18,14 @@ def allocate(line: OrderLine, repo: AbstractRepository, session) -> str:
     batchref = model.allocate(line, batches)
     session.commit()
     return batchref
+
+
+def deallocate(
+    order_reference: str, sku: str, repo: AbstractRepository, session
+) -> str:
+    batches = repo.list()
+    if not is_valid_sku(sku, batches):
+        raise InvalidSku(f"Invalid sku {sku}")
+    batchref = model.deallocate(order_reference, sku, batches)
+    session.commit()
+    return batchref
