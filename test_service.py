@@ -2,9 +2,9 @@ from datetime import date
 from datetime import timedelta
 import pytest
 
-from model import Batch
-from model import OrderLine
-from model import ReferenceAndSkuNotFound
+from domain.model import Batch
+from domain.model import OrderLine
+from domain.model import ReferenceAndSkuNotFound
 from repository import AbstractRepository
 from service import allocate
 from service import deallocate

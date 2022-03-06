@@ -1,4 +1,4 @@
-import model
+from domain import model
 import repository
 
 

@@ -8,7 +8,7 @@ from sqlalchemy import Table
 from sqlalchemy.orm import mapper
 from sqlalchemy.orm import relationship
 
-import model
+from domain import model
 
 metadata = MetaData()
 

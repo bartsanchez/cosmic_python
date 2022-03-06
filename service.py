@@ -1,5 +1,5 @@
-import model
-from model import OrderLine
+from domain import model
+from domain.model import OrderLine
 from repository import AbstractRepository
 
 
