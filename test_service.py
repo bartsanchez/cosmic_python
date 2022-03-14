@@ -6,9 +6,9 @@ from domain.model import Batch
 from domain.model import OrderLine
 from domain.model import ReferenceAndSkuNotFound
 from repository import AbstractRepository
-from service import allocate
-from service import deallocate
-from service import InvalidSku
+from service_layer.services import allocate
+from service_layer.services import deallocate
+from service_layer.services import InvalidSku
 
 today = date.today()
 tomorrow = today + timedelta(days=1)

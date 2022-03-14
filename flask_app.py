@@ -5,9 +5,9 @@ from sqlalchemy.orm import sessionmaker
 
 import config
 from domain import model
+from service_layer import services
 import orm
 import repository
-import service
 
 
 orm.start_mappers()
@@ -26,8 +26,8 @@ def allocate_endpoint():
     )
 
     try:
-        batchref = service.allocate(line, repo, session)
-    except (model.OutOfStock, service.InvalidSku) as e:
+        batchref = services.allocate(line, repo, session)
+    except (model.OutOfStock, services.InvalidSku) as e:
         return {"message": str(e)}, 400
 
     return {"batchref": batchref}, 201
@@ -40,8 +40,8 @@ def deallocate_endpoint():
     order_reference = request.json["order_reference"]
     sku = request.json["sku"]
     try:
-        batchref = service.deallocate(order_reference, sku, repo, session)
-    except (model.OutOfStock, service.InvalidSku) as e:
+        batchref = services.deallocate(order_reference, sku, repo, session)
+    except (model.OutOfStock, services.InvalidSku) as e:
         return {"message": str(e)}, 400
 
     return {"batchref": batchref}, 201
