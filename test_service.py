@@ -5,7 +5,7 @@ import pytest
 from domain.model import Batch
 from domain.model import OrderLine
 from domain.model import ReferenceAndSkuNotFound
-from repository import AbstractRepository
+from adapters.repository import AbstractRepository
 from service_layer.services import allocate
 from service_layer.services import deallocate
 from service_layer.services import InvalidSku

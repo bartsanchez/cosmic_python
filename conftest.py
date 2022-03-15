@@ -8,8 +8,8 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker, clear_mappers
 
 import config
-from orm import metadata
-from orm import start_mappers
+from adapters.orm import metadata
+from adapters.orm import start_mappers
 
 
 @pytest.fixture

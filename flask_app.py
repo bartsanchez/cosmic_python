@@ -6,8 +6,8 @@ from sqlalchemy.orm import sessionmaker
 import config
 from domain import model
 from service_layer import services
-import orm
-import repository
+from adapters import orm
+from adapters import repository
 
 
 orm.start_mappers()
